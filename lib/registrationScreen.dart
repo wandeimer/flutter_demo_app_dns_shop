@@ -2,7 +2,6 @@ import 'data_classes.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'preRegistrationScreen.dart';
 
 class RegistrationScreen extends StatefulWidget {
   static const routeName = '/extractArguments';
@@ -74,23 +73,42 @@ class RegistrationScreenState extends State<RegistrationScreen> {
                     TextFormField(
                       decoration:
                           InputDecoration(labelText: 'Ссылка на github'),
+                      keyboardType: TextInputType.url,
                       validator: (value) {
+                        var gitUrlPattern =
+                            r"(http(s)?)(:(\/\/)?)(github\.com\/.+)";
                         if (value.isEmpty) {
                           return 'Введите сслыку на github';
                         } else {
-                          _github = value;
+                          if (RegExp(gitUrlPattern, caseSensitive: false)
+                              .hasMatch(value)) {
+                            _github = value;
+                          } else {
+                            return 'Введите корректную ссылку на github';
+                          }
                         }
                         return null;
                       },
                     ),
                     TextFormField(
                       decoration:
-                          InputDecoration(labelText: 'Ссылка на резюие'),
+                          InputDecoration(labelText: 'Ссылка на резюме'),
+                      keyboardType: TextInputType.url,
                       validator: (value) {
+                        var summaryUrlPattern =
+                            //r"(http(s)?)(:(\/\/)?)(\/.+)";
+                            r"^((?:.|\n)*?)((http:\/\/www\.|https:\/\/www\.|http:\/\/|https:\/\/)?[a-z0-9]+([\-\.]{1}[a-z0-9]+)([-A-Z0-9.]+)(/[-A-Z0-9+&@#/%=~_|!:,.;]*)?(\?[A-Z0-9+&@#/%=~_|!:‌​,.;]*)?)";
                         if (value.isEmpty) {
-                          return 'Введите сслыку на резюие';
+                          return 'Введите сслыку на резюме';
                         } else {
-                          _resume = value;
+                          if (RegExp(
+                            summaryUrlPattern,
+                            caseSensitive: false,
+                          ).hasMatch(value)) {
+                            _resume = value;
+                          } else {
+                            return 'Введите корректную сслыку на резюме';
+                          }
                         }
                         return null;
                       },
@@ -99,14 +117,11 @@ class RegistrationScreenState extends State<RegistrationScreen> {
           Padding(
             padding: EdgeInsets.symmetric(vertical: 50.0),
             child: RaisedButton(
+              textColor: Theme.of(context).accentColor,
               onPressed: () {
                 //Scaffold.of(context).showSnackBar(SnackBar(content: Text('Processing Data')));
                 if (_formState.currentState.validate()) {
                   _getTokenButton();
-                  Navigator.pushNamed(
-                    context,
-                    PreRegistrationScreen.routeName,
-                  );
                 }
               },
               child: Text('ЗАРЕГИСТРИРОВАТЬСЯ'),
