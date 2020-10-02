@@ -1,7 +1,13 @@
-import 'data_classes.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
 import 'package:flutter/material.dart';
+
+import 'package:http/http.dart' as http;
+import 'dart:async';
+import 'dart:convert';
+import 'dart:io';
+
+
+import 'data_classes.dart';
+import 'package:flutter/material.dart' show AlertDialog, AppBar, AsyncSnapshot, BuildContext, Center, CircularProgressIndicator, Colors, Column, CrossAxisAlignment, EdgeInsets, FlatButton, Form, FormState, FutureBuilder, GlobalKey, Icon, Icons, InputDecoration, MainAxisAlignment, ModalRoute, Navigator, Padding, RaisedButton, Scaffold, ScaffoldState, SizedBox, State, StatefulWidget, Text, TextFormField, TextInputType, Theme, Widget, showDialog;
 
 class RegistrationScreen extends StatefulWidget {
   static const routeName = '/extractArguments';
@@ -13,6 +19,7 @@ class RegistrationScreen extends StatefulWidget {
 
 class RegistrationScreenState extends State<RegistrationScreen> {
   final _formState = GlobalKey<FormState>();
+  final GlobalKey<ScaffoldState> _scaffoldKey = new GlobalKey<ScaffoldState>();
 
   @override
   Widget build(BuildContext context) {
@@ -27,8 +34,13 @@ class RegistrationScreenState extends State<RegistrationScreen> {
     String _token = args.token;
     String _github;
     String _resume;
+    String _notificationTitle;
+    String _notificationText;
+    Future<String> _response;
 
-    _getTokenButton() async {
+    String text = "no";
+
+    Future<String> _getTokenButton() async {
       try {
         var response = await http.post(_url,
             body: jsonEncode({
@@ -56,9 +68,11 @@ class RegistrationScreenState extends State<RegistrationScreen> {
         print("error: $error");
       }
       setState(() {}); //reBuildWidget
+      return _summaryResponse.message;
     } //_sendRequestPos
 
     return Scaffold(
+      key: _scaffoldKey,
       appBar: AppBar(
         title: Text('Отправка данных'),
       ),
@@ -96,7 +110,6 @@ class RegistrationScreenState extends State<RegistrationScreen> {
                       keyboardType: TextInputType.url,
                       validator: (value) {
                         var summaryUrlPattern =
-                            //r"(http(s)?)(:(\/\/)?)(\/.+)";
                             r"^((?:.|\n)*?)((http:\/\/www\.|https:\/\/www\.|http:\/\/|https:\/\/)?[a-z0-9]+([\-\.]{1}[a-z0-9]+)([-A-Z0-9.]+)(/[-A-Z0-9+&@#/%=~_|!:,.;]*)?(\?[A-Z0-9+&@#/%=~_|!:‌​,.;]*)?)";
                         if (value.isEmpty) {
                           return 'Введите сслыку на резюме';
@@ -113,22 +126,116 @@ class RegistrationScreenState extends State<RegistrationScreen> {
                         return null;
                       },
                     ),
+                    Text(text),
                   ])),
           Padding(
             padding: EdgeInsets.symmetric(vertical: 50.0),
             child: RaisedButton(
               textColor: Theme.of(context).accentColor,
-              onPressed: () {
-                //Scaffold.of(context).showSnackBar(SnackBar(content: Text('Processing Data')));
+              onPressed: () async {
                 if (_formState.currentState.validate()) {
-                  _getTokenButton();
+                  _response = (await _getTokenButton()) as Future<String>;
+                  /*
+                  if (_response == "") {
+                    text = "success";
+                  } else {
+                    text = _response as String;
+                  }
+                  _showDialog(text);
+
+                   */
+                  //_scaffoldKey.currentState.showSnackBar(SnackBar(content: Text(text), backgroundColor: DNSColor.shade500));
                 }
               },
               child: Text('ЗАРЕГИСТРИРОВАТЬСЯ'),
             ),
-          )
+          ),
+        FutureBuilder<String>(
+        future: _response, // a previously-obtained Future<String> or null
+        builder: (BuildContext context, AsyncSnapshot<String> snapshot) {
+          List<Widget> children;
+          if (snapshot.hasData) {
+            children = <Widget>[
+              Icon(
+                Icons.check_circle_outline,
+                color: Colors.green,
+                size: 60,
+              ),
+              Padding(
+                padding: const EdgeInsets.only(top: 16),
+                child: Text('Result: ${snapshot.data}'),
+              )
+            ];
+          } else if (snapshot.hasError) {
+            children = <Widget>[
+              Icon(
+                Icons.error_outline,
+                color: Colors.red,
+                size: 60,
+              ),
+              Padding(
+                padding: const EdgeInsets.only(top: 16),
+                child: Text('Error: ${snapshot.error}'),
+              )
+            ];
+          }
+          else {
+            children = <Widget>[
+              SizedBox(
+                child: CircularProgressIndicator(),
+                width: 60,
+                height: 60,
+              ),
+              const Padding(
+                padding: EdgeInsets.only(top: 16),
+                child: Text('Awaiting result...'),
+              )
+            ];
+          }
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: children,
+            ),
+          );
+        }
+        ),
         ],
       ),
     );
   }
+
+  void _showDialog(String message) {
+    showDialog(
+      context: context,
+      child: AlertDialog(
+        title: Text(message),
+        actions: [
+          FlatButton(
+            child: Text('OK'),
+            onPressed: () => Navigator.of(context).pop(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showLoadingCircle(String _title, String _text) {
+    showDialog(
+      context: context,
+      child: AlertDialog(
+        title: Text(_title),
+        content: Text(_text
+        ),
+        actions: [
+          FlatButton(
+            child: Text('OK'),
+            onPressed: () => Navigator.of(context).pop(),
+          ),
+        ],
+      ),
+    );
+  }
+
 }
