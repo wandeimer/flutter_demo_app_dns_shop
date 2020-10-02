@@ -25,7 +25,7 @@ class RegistrationScreenState extends State<RegistrationScreen> {
         'https://vacancy.dns-shop.ru/api/candidate/summary';
     SummaryResponse _summaryResponse;
     String _name = args.name;
-    String _surname = args.name;
+    String _surname = args.surname;
     String _mail = args.mail;
     String _phone = args.phone;
     String _token = args.token;
