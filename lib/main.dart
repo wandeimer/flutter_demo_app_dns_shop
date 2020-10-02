@@ -13,7 +13,8 @@ class DNSTestApp extends StatelessWidget {
         home: PreRegistrationScreen(),
         routes: {
           RegistrationScreen.routeName: (context) => RegistrationScreen(),
-        });
+        },
+        debugShowCheckedModeBanner: false);
   }
 }
 
@@ -33,10 +34,6 @@ const MaterialColor DNSColor = const MaterialColor(
   },
 );
 
-const TextTheme whiteText = const TextTheme(
-  headline6: TextStyle(color: Colors.white),
-);
-
 ThemeData layoutTheme = ThemeData(
   buttonTheme: ButtonThemeData(
     buttonColor: DNSColor,
@@ -48,4 +45,8 @@ ThemeData layoutTheme = ThemeData(
   primaryColor: DNSColor,
   accentColor: Colors.white,
   primaryTextTheme: whiteText,
+);
+
+const TextTheme whiteText = const TextTheme(
+  headline6: TextStyle(color: Colors.white),
 );

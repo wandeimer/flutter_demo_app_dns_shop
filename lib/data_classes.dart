@@ -16,7 +16,8 @@ class TokenResponse {
   TokenResponse(this.code, this.message, this.data);
 
   factory TokenResponse.fromJson(dynamic json) {
-    return TokenResponse(json['code'] as int, json['message'] as String, json['data'] as String);
+    return TokenResponse(
+        json['code'] as int, json['message'] as String, json['data'] as String);
   }
 
   @override

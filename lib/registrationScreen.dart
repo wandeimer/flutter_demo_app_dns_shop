@@ -1,10 +1,13 @@
+import 'dart:async';
+
 import 'data_classes.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'main.dart';
 
 class RegistrationScreen extends StatefulWidget {
-  static const routeName = '/extractArguments';
+  static const routeName = '/registrationScreen';
   @override
   RegistrationScreenState createState() {
     return RegistrationScreenState();
@@ -13,12 +16,13 @@ class RegistrationScreen extends StatefulWidget {
 
 class RegistrationScreenState extends State<RegistrationScreen> {
   final _formState = GlobalKey<FormState>();
+  final GlobalKey<ScaffoldState> _scaffoldKey = new GlobalKey<ScaffoldState>();
 
   @override
   Widget build(BuildContext context) {
     final ScreenArguments args = ModalRoute.of(context).settings.arguments;
     final String _url =
-        'https://vacancy.dns-shop.ru/api/candidate/test/summary';
+        'https://vacancy.dns-shop.ru/api/candidate/summary';
     SummaryResponse _summaryResponse;
     String _name = args.name;
     String _surname = args.name;
@@ -28,7 +32,7 @@ class RegistrationScreenState extends State<RegistrationScreen> {
     String _github;
     String _resume;
 
-    _getTokenButton() async {
+    _sendRegistrationData() async {
       try {
         var response = await http.post(_url,
             body: jsonEncode({
@@ -49,16 +53,22 @@ class RegistrationScreenState extends State<RegistrationScreen> {
           _summaryResponse =
               SummaryResponse.fromJson(jsonDecode(response.body));
           print("message: ${_summaryResponse.message}");
+          setState(() {}); //reBuildWidget
+          return _summaryResponse.message;
         } else {
           print("response status code: ${response.statusCode}");
+          setState(() {}); //reBuildWidget
+          return "Ошибка сервера. Код ответа: ${response.statusCode}";
         }
       } catch (error) {
         print("error: $error");
+        setState(() {}); //reBuildWidget
+        return "Ошибка при отправке запроса. ERROR: $error";
       }
-      setState(() {}); //reBuildWidget
     } //_sendRequestPos
 
     return Scaffold(
+      key: _scaffoldKey,
       appBar: AppBar(
         title: Text('Отправка данных'),
       ),
@@ -121,12 +131,41 @@ class RegistrationScreenState extends State<RegistrationScreen> {
               onPressed: () {
                 //Scaffold.of(context).showSnackBar(SnackBar(content: Text('Processing Data')));
                 if (_formState.currentState.validate()) {
-                  _getTokenButton();
+                  _scaffoldKey.currentState.showSnackBar(SnackBar(
+                    content: Text("Отправка данных"),
+                    backgroundColor: DNSColor.shade500,
+                    duration: Duration(seconds: 1),
+                  ));
+                  Future<String> _message = _sendRegistrationData();
+                  _message.then((value) {
+                    if (value == "") {
+                      _showDialog("Регистрация завершена",
+                          "Регистрация завершена успешно. Наш сотрудник свяжется с вами");
+                    } else {
+                      _showDialog("Ошибка", value);
+                    }
+                  });
                 }
               },
               child: Text('ЗАРЕГИСТРИРОВАТЬСЯ'),
             ),
           )
+        ],
+      ),
+    );
+  }
+
+  void _showDialog(String _title, String _message) {
+    showDialog(
+      context: context,
+      child: AlertDialog(
+        title: Text(_title),
+        content: Text(_message),
+        actions: [
+          FlatButton(
+            child: Text('OK'),
+            onPressed: () => Navigator.of(context).pop(),
+          ),
         ],
       ),
     );
